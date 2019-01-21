@@ -1,0 +1,8 @@
+# Default reviewers
+*       @abashmakou-ib @dkononovich
+
+# All under the /gorm/ dir goes to Dmitrij
+/gorm/ @dkononovich
+
+# All under the /health/ dir goes to Alexey
+/gorm/ @abashmakou-ib
