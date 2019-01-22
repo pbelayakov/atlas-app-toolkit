@@ -44,6 +44,41 @@ func ApplyCollectionOperators(ctx context.Context, db *gorm.DB, obj interface{},
 	return db, nil
 }
 
+// ApplyCollectionOperators applies collection operators to gorm instance db.
+func Test(ctx context.Context, db *gorm.DB, obj interface{}, pb proto.Message, f *query.Filtering, s *query.Sorting, p *query.Pagination, fs *query.FieldSelection) (*gorm.DB, error) {
+	db, fAssocToJoin, err := ApplyFiltering(ctx, db, f, obj, pb)
+	if err != nil {
+		return nil, err
+	}
+
+	db, sAssocToJoin, err := ApplySorting(ctx, db, s, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	if fAssocToJoin == nil && sAssocToJoin != nil {
+		fAssocToJoin = make(map[string]struct{})
+	}
+	for k := range sAssocToJoin {
+		fAssocToJoin[k] = struct{}{}
+	}
+	db, err = JoinAssociations(ctx, db, fAssocToJoin, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	db = ApplyPagination(ctx, db, p)
+
+	db, err = ApplyFieldSelection(ctx, db, fs, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+
+
 // ApplyFiltering applies filtering operator f to gorm instance db.
 func ApplyFiltering(ctx context.Context, db *gorm.DB, f *query.Filtering, obj interface{}, pb proto.Message) (*gorm.DB, map[string]struct{}, error) {
 	str, args, assocToJoin, err := FilteringToGorm(ctx, f, obj, pb)
